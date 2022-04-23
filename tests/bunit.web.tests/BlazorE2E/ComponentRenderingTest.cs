@@ -82,6 +82,26 @@ public class ComponentRenderingTest : TestContext
 	}
 
 	[Fact]
+	public void CanTriggerClickOnDynamicButtonWithLambda()
+	{
+		for (var i = 1; i < 10; i++)
+		{
+			try
+			{
+				var cut = RenderComponent<CounterComponentDynamic>();
+				cut.WaitForAssertion(() => cut.Find("[data-id=1]"));
+				cut.Find("[data-id=1]").Click();
+				cut.WaitForAssertion(() => cut.Find("[data-id=2]"));
+				Assert.NotNull(cut);
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Failed after {i} iterations", ex);
+			}
+		}
+	}
+
+	[Fact]
 	public void CanTriggerKeyPressEvents()
 	{
 		// List is initially empty
