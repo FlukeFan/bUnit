@@ -2,10 +2,10 @@
 // It's content has been modified from the original.
 // See the NOTICE.md at the root of this repository for a copy
 // of the license from the aspnetcore repository.
+using System.Collections;
 using System.Numerics;
 using Bunit.TestAssets.BlazorE2E;
 using Bunit.TestAssets.BlazorE2E.HierarchicalImportsTest.Subdir;
-using Bunit.TestAssets.SampleComponents.DisposeComponents;
 using Xunit.Abstractions;
 
 namespace Bunit.BlazorE2E;
@@ -81,24 +81,27 @@ public class ComponentRenderingTest : TestContext
 		cut.WaitForAssertion(() => Assert.Equal("Stopped", stateElement.TextContent));
 	}
 
-	[Fact]
-	public void CanTriggerClickOnDynamicButtonWithLambda()
+	private class RunManyTimes : IEnumerable<object[]>
 	{
-		for (var i = 1; i < 10; i++)
-		{
-			try
-			{
-				var cut = RenderComponent<CounterComponentDynamic>();
-				cut.WaitForAssertion(() => cut.Find("[data-id=1]"));
-				cut.Find("[data-id=1]").Click();
-				cut.WaitForAssertion(() => cut.Find("[data-id=2]"));
-				Assert.NotNull(cut);
-			}
-			catch (Exception ex)
-			{
-				throw new Exception($"Failed after {i} iterations", ex);
-			}
-		}
+		public IEnumerator<object[]> GetEnumerator() => Enumerable.Range(0, 10)
+			.Select(i => new object[] { i })
+			.GetEnumerator();
+
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+	}
+
+	[Theory]
+	[ClassData(typeof(RunManyTimes))]
+	public void CanTriggerClickOnDynamicButtonWithLambda(int i)
+	{
+		var cut = RenderComponent<CounterComponentDynamic>();
+		cut.WaitForAssertion(() => cut.Find("[data-id=1]"));
+		cut.Find("[data-id=1]").Click();
+		cut.WaitForAssertion(() => cut.Find("[data-id=2]"));
+
+		// to kep Analyzers happy
+		Assert.True(i >= 0);
+		Assert.NotNull(cut);
 	}
 
 	[Fact]
